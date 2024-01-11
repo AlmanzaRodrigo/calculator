@@ -86,87 +86,67 @@ class Calculator():
 
     # number buttons methods
     def btt_1(self):
-        if self.is_first_input():
-            self.set_display("1")
-        else:
-            self.set_display(self.get_display() + "1")
+        self.num_btt_func("1")
 
     def btt_2(self):
-        if self.is_first_input():
-            self.set_display("2")
-        else:
-            self.set_display(self.get_display() + "2")
+        self.num_btt_func("2")
 
     def btt_3(self):
-        if self.is_first_input():
-            self.set_display("3")
-        else:
-            self.set_display(self.get_display() + "3")
+        self.num_btt_func("3")
 
     def btt_4(self):
-        if self.is_first_input():
-            self.set_display("4")
-        else:
-            self.set_display(self.get_display() + "4")
+        self.num_btt_func("4")
 
     def btt_5(self):
-        if self.is_first_input():
-            self.set_display("5")
-        else:
-            self.set_display(self.get_display() + "5")
+        self.num_btt_func("5")
 
     def btt_6(self):
-        if self.is_first_input():
-            self.set_display("6")
-        else:
-            self.set_display(self.get_display() + "6")
+        self.num_btt_func("6")
 
     def btt_7(self):
-        if self.is_first_input():
-            self.set_display("7")
-        else:
-            self.set_display(self.get_display() + "7")
+        self.num_btt_func("7")
 
     def btt_8(self):
-        if self.is_first_input():
-            self.set_display("8")
-        else:
-            self.set_display(self.get_display() + "8")
+        self.num_btt_func("8")
 
     def btt_9(self):
-        if self.is_first_input():
-            self.set_display("9")
-        else:
-            self.set_display(self.get_display() + "9")
+        self.num_btt_func("9")
     
     def btt_0(self):
-        if self.is_first_input():
-            self.set_display("0")
-        else:
-            self.set_display(self.get_display() + "0")
+        self.num_btt_func("0")
 
     def btt_dot(self):
         if "." not in self.get_display():
             self.set_display(self.get_display() + ".")
 
+    def num_btt_func(self, number):
+        """control the functionality of all numbers 
+        buttons"""
+        if self.is_first_input():
+            self.set_display(number)
+            self.result = float(number)
+        else:
+            self.set_display(self.get_display() + number)
+            self.result = float(self.get_display())
+
     # arithmetic buttons methods
     def btt_add(self):
-        self.btt_equal()
+        self.input_numbers.append(self.result)
         self.operation.append(lambda x, y: x + y)
         self.set_display("", "number_display")
     
     def btt_sub(self):
-        self.btt_equal()
+        self.input_numbers.append(self.result)
         self.operation.append(lambda x, y: x - y)
         self.set_display("", "number_display")    
 
     def btt_mult(self):
-        self.btt_equal()
+        self.input_numbers.append(self.result)
         self.operation.append(lambda x, y: x * y)
         self.set_display("", "number_display")
 
     def btt_div(self):
-        self.btt_equal()
+        self.input_numbers.append(self.result)
         if self.is_division_posible():
             self.operation.append(lambda x, y: x / y)
         else:
@@ -175,9 +155,8 @@ class Calculator():
 
     def btt_equal(self):
         if self.operation != []:
-            self.input_numbers.append(float(self.get_display()))
             for number, operator in zip(self.input_numbers, self.operation):
-                self.result = operator(self.result, number)
+                self.result = operator(number, self.result)
             self.set_display(str(self.result))
             self.operation = []
             self.input_numbers = []
@@ -222,8 +201,6 @@ class Calculator():
     def get_display(self, display="number_display"):
         return self.display[display]["text"]
     
-    def set_input_number(self, number):
-        self.input_numbers.append(self.input_numbers + number)
 
     def run(self):
         self.create_window()
