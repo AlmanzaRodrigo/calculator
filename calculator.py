@@ -5,16 +5,18 @@ from pathlib import Path
 
 class Calculator():
     def __init__(self) -> None:
-        self.result = float()
-        self.memory = float()
-        self.input_numbers = []
-        self.operation = []
+        self.current_input = float(0)
+        self.memory = float(0)
+        self.operation = None
+        self.result = None
 
     def create_window(self):
         """creates a tkinter window"""
         self.root = tk.Tk()
         self.root.title("Calculator")
-        # root.iconbitmap(self.current_directory / "some_icon.ico")
+        self.root.geometry("290x390")
+        self.root.resizable(0,0)
+        self.root.iconbitmap(Path.cwd() / "calculator.ico")
     
     def create_win_elements(self):
         """Creates GUI elements"""
@@ -27,7 +29,7 @@ class Calculator():
         self.display = {}
         self.display["display"] = tk.Label(self.frames["display_frame"], bg="#CDD6B6", width=400, height=50)
         self.display["number_display"] = tk.Label(self.display["display"], text="0", bg="#CDD6B6", fg="#4B6E84", font=self.display_font, anchor="se", width=17)
-        self.display["memory_display"] = tk.Label(self.display["display"], text="M = 1234567890", bg="#CDD6B6", fg="#4B6E84")
+        self.display["memory_display"] = tk.Label(self.display["display"], text="M =", bg="#CDD6B6", fg="#4B6E84")
 
         self.buttons = {}
         self.buttons["button_mc"] = tk.Button(self.frames["buttons_frame"], text="MC", bg="#4B6E84", fg="white", width=6, height=2, command=self.btt_mc)
@@ -48,10 +50,11 @@ class Calculator():
         self.buttons["button1"] = tk.Button(self.frames["buttons_frame"], text="1", bg="#7592A5", fg="white", width=6, height=2, command=self.btt_1)
         self.buttons["button2"] = tk.Button(self.frames["buttons_frame"], text="2", bg="#7592A5", fg="white", width=6, height=2, command=self.btt_2)
         self.buttons["button3"] = tk.Button(self.frames["buttons_frame"], text="3", bg="#7592A5", fg="white", width=6, height=2, command=self.btt_3)
-        self.buttons["button_equal"] = tk.Button(self.frames["buttons_frame"], text="=", bg="#D17831", fg="white", width=6, height=5, command=self.btt_equal)
+        self.buttons["button_clear"] = tk.Button(self.frames["buttons_frame"], text="CL", bg="#D17831", fg="white", width=6, height=2, command=self.btt_clear)
 
         self.buttons["button0"] = tk.Button(self.frames["buttons_frame"], text="0", bg="#7592A5", fg="white", width=15, height=2, command=self.btt_0)
         self.buttons["button_dot"] = tk.Button(self.frames["buttons_frame"], text=".", bg="#7592A5", fg="white", width=6, height=2, command=self.btt_dot)
+        self.buttons["button_equal"] = tk.Button(self.frames["buttons_frame"], text="=", bg="#D17831", fg="white", width=6, height=2, command=self.btt_equal)
 
     def draw_elements(self):
         """Draw GUI elements in tkinter window"""
@@ -79,10 +82,11 @@ class Calculator():
         self.buttons["button1"].grid(row=3, column=0, padx=5, pady=5)
         self.buttons["button2"].grid(row=3, column=1, padx=5, pady=5)
         self.buttons["button3"].grid(row=3, column=2, padx=5, pady=5)
-        self.buttons["button_equal"].grid(row=3, column=3, padx=5, pady=5, rowspan=2)
+        self.buttons["button_clear"].grid(row=3, column=3, padx=5, pady=5)
 
         self.buttons["button0"].grid(row=4, column=0, padx=5, pady=5, columnspan=2)
         self.buttons["button_dot"].grid(row=4, column=2, padx=5, pady=5)
+        self.buttons["button_equal"].grid(row=4, column=3, padx=5, pady=5)
 
     # number buttons methods
     def btt_1(self):
@@ -124,51 +128,65 @@ class Calculator():
         buttons"""
         if self.is_first_input():
             self.set_display(number)
-            self.result = float(number)
+            self.current_input = float(number)
         else:
             self.set_display(self.get_display() + number)
-            self.result = float(self.get_display())
+            self.current_input = float(self.get_display())
 
     # arithmetic buttons methods
     def btt_add(self):
-        self.input_numbers.append(self.result)
-        self.operation.append(lambda x, y: x + y)
-        self.set_display("", "number_display")
+        self.arith_btt_func(lambda x, y: x + y)
+        #self.arith_btt_func("+")
     
     def btt_sub(self):
-        self.input_numbers.append(self.result)
-        self.operation.append(lambda x, y: x - y)
-        self.set_display("", "number_display")    
+        self.arith_btt_func(lambda x, y: x - y)
+        #self.arith_btt_func("-")
 
     def btt_mult(self):
-        self.input_numbers.append(self.result)
-        self.operation.append(lambda x, y: x * y)
-        self.set_display("", "number_display")
+        self.arith_btt_func(lambda x, y: x * y)
+        #self.arith_btt_func("*")
 
     def btt_div(self):
-        self.input_numbers.append(self.result)
-        if self.is_division_posible():
-            self.operation.append(lambda x, y: x / y)
+        self.arith_btt_func(lambda x, y: x / y)
+        #self.arith_btt_func("/")
+    
+    def arith_btt_func(self, operation):
+        if self.result == None:
+            self.result = self.current_input
+            self.operation = operation
+            self.set_display("")
+        elif self.operation != None:
+            self.result = self.operation(self.result, self.current_input)
+            self.current_input = float(0)
+            self.operation = operation
+            self.set_display("")
         else:
-            self.set_display("ZERO DIV ERROR")
-        self.set_display("", "number_display")
+            self.operation = operation
+            self.set_display("")
 
     def btt_equal(self):
-        if self.operation != []:
-            for number, operator in zip(self.input_numbers, self.operation):
-                self.result = operator(number, self.result)
+        if self.operation != None:
+            self.result = self.operation(self.result, self.current_input)
+            self.current_input = float(0)
+            self.operation = None
             self.set_display(str(self.result))
-            self.operation = []
-            self.input_numbers = []
-        else:
-            self.result = float(self.get_display())
 
     # memory buttons methods
     def btt_mc(self):
         self.set_display("", "memory_display")
 
     def btt_mem_add(self):
-        pass
+        if self.result != None:
+            self.memory += self.result
+            self.set_display(str(self.memory), "memory_display")
+        else:
+            self.memory += self.current_input
+            self.set_display(str(self.memory), "memory_display")
+
+    def btt_clear(self):
+        self.__init__()
+        self.set_display("0")
+        self.set_display("", "memory_display")
 
     # control methods
     def is_display_overflow(self, one_display):
@@ -176,10 +194,6 @@ class Calculator():
             return len(self.get_display(one_display)) > 17
         elif one_display == "memory_display":
             return len(self.get_display(one_display)) > 10
-
-    def is_division_posible(self):
-        """zero division check"""
-        return self.result != 0
     
     def is_first_input(self):
         return self.get_display() == "0"
@@ -188,11 +202,14 @@ class Calculator():
     # getters and setters
     def set_display(self, value, display="number_display"):
         if display == "memory_display":
-            if self.is_display_overflow("number_display"):
+            if value == "":
+                self.display[display].config(text="M = " + value)
+            elif self.is_display_overflow("memory_display"):
                 pass
             else:
                 self.display[display].config(text="M = " + value)
-        else:    
+        
+        elif display == "number_display":
             if self.is_display_overflow("number_display"):
                 pass
             else:
